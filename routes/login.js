@@ -1,10 +1,13 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const FormData = require('form-data');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
+const jsonwebtoken = require('jsonwebtoken');
 const CONFIG = require('../config.json');
 const guild = require('../models/guild');
+const crypto = require('../constants/crypto');
 
 router.get('/login', async (req, res) => {
 	//If user isn't logged in, force them to log in.
@@ -13,7 +16,19 @@ router.get('/login', async (req, res) => {
 		return;
 	}
 
-	let access_token = req.cookies.access_token;
+	let jwt_token = req.cookies.access_token;
+	let access_token = null;
+
+	jwt.verify(jwt_token, CONFIG.jwt_secret, (err, token) => {
+		if(err) {
+			res.clearCookie('access_token');
+			return res.send('something went wrong.');
+		}
+
+		access_token = token;
+	});
+
+	access_token = crypto.decrypt(access_token.access_token);
 
 	//Get user information
 	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${access_token}` } });
@@ -34,7 +49,7 @@ router.get('/auth', (async (req, res) => {
 		return;
 	}
 
-	const data = new FormData();
+	let data = new FormData();
 	data.append('client_id', CONFIG.client_id);
 	data.append('client_secret', CONFIG.client_secret);
     
@@ -46,15 +61,16 @@ router.get('/auth', (async (req, res) => {
 	let resp = await fetch('https://discordapp.com/api/oauth2/token', {
 		method: 'POST',
 		body: data
-	})
-		.catch(e => {
-			console.log(e);
-			res.send('Something went wrong.');
-		});
+	});
 
-	var json = await resp.json();
-    
-	res.cookie('access_token', json.access_token, {expires: new Date(Date.now() + (parseInt(json.expires_in) * 1000)), httpOnly: true});
+	let json = await resp.json();
+	if(json.message) return res.send('something went wrong.');
+
+	let expiresIn = json.expires_in;
+
+	let jwt = jsonwebtoken.sign({ access_token: crypto.encrypt(json.access_token)}, CONFIG.jwt_secret, {expiresIn: expiresIn});
+
+	res.cookie('access_token', jwt, {expires: new Date(Date.now() + (expiresIn * 1000)), httpOnly: true});
 	res.redirect(`/guild/${req.query.guild_id}`);
 }));
 

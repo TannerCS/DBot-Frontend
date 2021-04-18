@@ -1,15 +1,31 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const CONFIG = require('../config.json');
+const crypto = require('../constants/crypto');
 
 const guild = require('../models/guild');
 
 router.get('/guild/:uid/commands', (async (req, res) => {
 	let guildID = req.params.uid;
-	let access_token = req.cookies.access_token;
     
-	if(!guildID || !access_token) return res.send('something went wrong.');
+	if(!guildID) return res.send('something went wrong.');
 	
+	let jwt_token = req.cookies.access_token;
+	let access_token = null;
+
+	jwt.verify(jwt_token, CONFIG.jwt_secret, (err, token) => {
+		if(err) {
+			res.clearCookie('access_token');
+			return res.send('something went wrong.');
+		}
+
+		access_token = token;
+	});
+
+	access_token = crypto.decrypt(access_token.access_token);
+
 	//Get guild information from discord
 	let guildInfos = await fetch('https://discordapp.com/api/users/@me/guilds', {headers: { Authorization: `Bearer ${access_token}` } });
 	let guildJson = await guildInfos.json();
@@ -44,9 +60,22 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 
 router.post('/guild/:uid/commands', (async (req, res) => {
 	let guildID = req.params.uid;
-	let access_token = req.cookies.access_token;
 
-	if(!guildID || !access_token || !req.body) return res.sendStatus(401);
+	if(!guildID || !req.body) return res.sendStatus(401);
+
+	let jwt_token = req.cookies.access_token;
+	let access_token = null;
+
+	jwt.verify(jwt_token, CONFIG.jwt_secret, (err, token) => {
+		if(err) {
+			res.clearCookie('access_token');
+			return res.sendStatus(401);
+		}
+
+		access_token = token;
+	});
+
+	access_token = crypto.decrypt(access_token.access_token);
 
 	//Get database guild info
 	let guildSchema = await guild.findOne({guild_id: guildID});

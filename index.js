@@ -13,11 +13,6 @@ const CONFIG = require('./config.json');
 mongoose.connect(CONFIG.mongodb_url, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const db = mongoose.connection;
-db.on('error', function (err) {
-	if (err) // couldn't connect
-	db.db.close();
-	connect();
-});
 db.once('open', async () => {
 	console.log('Database Connected');
 });
