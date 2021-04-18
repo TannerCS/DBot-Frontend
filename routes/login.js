@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const FormData = require('form-data');
+
 const router = express.Router();
 const CONFIG = require('../config.json');
 const guild = require('../models/guild');
@@ -17,17 +18,14 @@ router.get('/login', async (req, res) => {
 	//Get user information
 	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${access_token}` } });
 	let userJson = await userInfo.json();
+	if(userJson.message) return res.send('something went wrong.');
     
 	//Get database guild info
-	let guildSchema = await guild.find({owner_id: userJson.id});
+	let guildSchema = await guild.findOne({owner_id: userJson.id});
     
-	if(guildSchema == null){
-		console.log('can\'t find guild');
-		res.send('something went wrong.');
-		return;
-	}
+	if(!guildSchema) return res.send('something went wrong.');
 
-	res.redirect(`/guild/${guildSchema[0].guild_id}`);
+	res.redirect(`/guild/${guildSchema.guild_id}`);
 });
 
 router.get('/auth', (async (req, res) => {

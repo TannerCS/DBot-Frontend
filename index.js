@@ -15,8 +15,7 @@ mongoose.connect(CONFIG.mongodb_url, { useNewUrlParser: true, useUnifiedTopology
 const db = mongoose.connection;
 db.on('error', function (err) {
 	if (err) // couldn't connect
-	// hack the driver to allow re-opening after initial network error
-		db.db.close();
+	db.db.close();
 	connect();
 });
 db.once('open', async () => {

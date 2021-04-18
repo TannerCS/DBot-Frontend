@@ -11,40 +11,38 @@ router.get('/guild/:uid',  (async (req, res) => {
 		return;
 	}
 
+	if(!req.params.uid) return res.send('something went wrong.');
+
 	let guildID = req.params.uid;
 	let access_token = req.cookies.access_token;
 
 	//Get guild information from discord
 	let guildInfos = await fetch('https://discordapp.com/api/users/@me/guilds', {headers: { Authorization: `Bearer ${access_token}` } });
 	let guildJson = await guildInfos.json();
-    
+	if(guildJson.message) return res.send('something went wrong.');
+
 	//Get user information
 	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${access_token}` } });
 	let userJson = await userInfo.json();
+	if(userJson.message) return res.send('something went wrong.');
     
 	//Get database guild info
-	let guildSchema = await guild.find({owner_id: userJson.id});
+	let guildSchema = await guild.findOne({owner_id: userJson.id});
     
 	//Filter owned guilds
 	let ownedGuilds = await guildJson.filter(guild => guild.owner == true);
 
+	if(!ownedGuilds.find(guild => guild.id == guildID)) return res.send('you don\'t have access.');
+
+	//filter out guilds that the bot is not in
 	for (let i = 0; i < ownedGuilds.length; i++) {
 		const ownedGuild = ownedGuilds[i];
-		const guildSchem = await guild.find({guild_id: ownedGuild.id});
+		const guildSchem = await guild.findOne({guild_id: ownedGuild.id});
         
-		if(guildSchem.length < 1){
+		if(!guildSchem){
 			ownedGuilds.splice(i, 1);
 		}
 	}
-
-	if(!ownedGuilds.find(guild => guild.id == guildID)){
-		res.send('You don\'t have access.');
-		return;
-	}
-
-	guildSchema.forEach(element => {
-		element.commands = JSON.parse(JSON.stringify(element.commands));
-	});
     
 	//Get profile pictures from guilds that have them
 	ownedGuilds.forEach(element => {

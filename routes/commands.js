@@ -8,42 +8,29 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 	let guildID = req.params.uid;
 	let access_token = req.cookies.access_token;
     
-	if(!guildID || !access_token){
-		res.send('something went wrong.');
-		return;
-	}
-
-	//Get database guild info
-	let guildSchema = await guild.find({guild_id: guildID});
-
-	//TODO: CACHE THIS SOMEHOW. TOO MANY CALLS TO DISCORD
+	if(!guildID || !access_token) return res.send('something went wrong.');
+	
 	//Get guild information from discord
 	let guildInfos = await fetch('https://discordapp.com/api/users/@me/guilds', {headers: { Authorization: `Bearer ${access_token}` } });
 	let guildJson = await guildInfos.json();
-
+	
 	//Filter owned guilds
-	let ownedGuilds = await guildJson.filter(guild => guild.owner == true);
-
+	let ownedGuilds = await guildJson.filter(guild => guild.owner === true);
+	
+	if(!ownedGuilds.find(guild => guild.id == guildID)) return res.send('You don\'t have access.');
+	
+	//filter out guilds that the bot is not in
 	for (let i = 0; i < ownedGuilds.length; i++) {
 		const ownedGuild = ownedGuilds[i];
-		const guildSchem = await guild.find({guild_id: ownedGuild.id});
-        
-		if(guildSchem.length < 1){
+		const guildSchem = await guild.findOne({guild_id: ownedGuild.id});
+		
+		if(!guildSchem){
 			ownedGuilds.splice(i, 1);
 		}
 	}
 
-	if(!ownedGuilds.find(guild => guild.id == guildID)){
-		res.send('You don\'t have access.');
-		return;
-	}
-
-	let currentSchema = null;
-	guildSchema.forEach(element => {
-		element.commands = JSON.parse(JSON.stringify(element.commands));
-
-		if(element.guild_id == guildID) currentSchema = element;
-	});
+	//Get database guild info
+	let guildSchema = await guild.findOne({guild_id: guildID});
 
 	//Get profile pictures from guilds that have them
 	ownedGuilds.forEach(element => {
@@ -52,44 +39,36 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 		}
 	});
 
-	res.render('commands', {guildSchema: currentSchema, ownedGuilds: ownedGuilds, currentGuild:  ownedGuilds.find(guild => guild.id == guildID)});
+	res.render('commands', {guildSchema: guildSchema, ownedGuilds: ownedGuilds, currentGuild:  ownedGuilds.find(guild => guild.id == guildID)});
 }));
 
 router.post('/guild/:uid/commands', (async (req, res) => {
 	let guildID = req.params.uid;
 	let access_token = req.cookies.access_token;
 
-	if(!guildID || !access_token || !req.body){
-		res.send('something went wrong.');
-		return;
-	}
+	if(!guildID || !access_token || !req.body) return res.sendStatus(401);
 
 	//Get database guild info
-	let guildSchema = await guild.find({guild_id: guildID});
+	let guildSchema = await guild.findOne({guild_id: guildID});
+	let commandKey = Object.keys(req.body);
 
-	//Loop through all the commands and parse them into json. TODO: Fix this idiot.
-	let currentSchema = null;
-	guildSchema.forEach(element => {
-		element.commands = JSON.parse(JSON.stringify(element.commands));
+	//If the command.Name is not found
+	if(commandKey.length !== 1) return res.sendStatus(404);
+	commandKey = commandKey[0];
 
-		if(element.guild_id == guildID) currentSchema = element;
-	});
+	//Find command to be modified
+	let command = await guildSchema.commands.find(command => command.Name == commandKey);
+	let oldComm = command;
 
-	
-	let commandKey = Object.keys(req.body)[0];
-	
-	let commands = JSON.parse(JSON.stringify(currentSchema.commands));
-	let comm = await commands.find(command => command.Name == commandKey);
-	let commId = commands.indexOf(comm);
+	//disable/enable command
+	let enabled = parseBool(req.body[commandKey]);
+	command.Enabled = enabled;
+	guildSchema.commands[oldComm] = command;
+	guildSchema.markModified('commands');
 
-	if(comm === -1) return res.sendStatus(404);
+	await guildSchema.save();
 
-	comm.Enabled = parseBool(req.body[commandKey]);
-	commands[commId] = comm;
-	currentSchema.commands = commands;
-
-	await currentSchema.save();
-	await res.sendStatus(200);
+	return res.sendStatus(200);
 }));
 
 function parseBool(b) {
