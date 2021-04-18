@@ -3,9 +3,31 @@ const fetch = require('node-fetch');
 const FormData = require('form-data');
 const router = express.Router();
 const CONFIG = require('../config.json');
+const guild = require('../models/guild');
 
-router.get('/login', (req, res) => {
-	res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=8&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20guilds.join%20applications.commands%20bot');
+router.get('/login', async (req, res) => {
+	//If user isn't logged in, force them to log in.
+	if(!req.cookies.access_token){
+			res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=8&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20guilds.join%20applications.commands%20bot');
+		return;
+	}
+
+	let access_token = req.cookies.access_token;
+
+	//Get user information
+	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${access_token}` } });
+	let userJson = await userInfo.json();
+    
+	//Get database guild info
+	let guildSchema = await guild.find({owner_id: userJson.id});
+    
+	if(guildSchema == null){
+		console.log('can\'t find guild');
+		res.send('something went wrong.');
+		return;
+	}
+
+	res.redirect(`/guild/${guildSchema[0].guild_id}`);
 });
 
 router.get('/auth', (async (req, res) => {
