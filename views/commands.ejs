@@ -9,7 +9,6 @@
             <script>
                 $(function() {
                     $('#<%= guildSchema.commands[i].Name %>').change(function() {
-                        console.log('<%= guildSchema.commands[i].Name %>');
                         $.ajax({
                             method: "POST",
                             url: window.location.href,

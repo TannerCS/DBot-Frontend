@@ -13,7 +13,12 @@ const CONFIG = require('./config.json');
 mongoose.connect(CONFIG.mongodb_url, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
+db.on('error', function (err) {
+	if (err) // couldn't connect
+	// hack the driver to allow re-opening after initial network error
+		db.db.close();
+	connect();
+});
 db.once('open', async () => {
 	console.log('Database Connected');
 });

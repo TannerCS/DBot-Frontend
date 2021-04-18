@@ -59,13 +59,15 @@ router.post('/guild/:uid/commands', (async (req, res) => {
 	let guildID = req.params.uid;
 	let access_token = req.cookies.access_token;
 
-	if(!guildID || !access_token){
+	if(!guildID || !access_token || !req.body){
 		res.send('something went wrong.');
 		return;
 	}
+
 	//Get database guild info
 	let guildSchema = await guild.find({guild_id: guildID});
 
+	//Loop through all the commands and parse them into json. TODO: Fix this idiot.
 	let currentSchema = null;
 	guildSchema.forEach(element => {
 		element.commands = JSON.parse(JSON.stringify(element.commands));
@@ -73,23 +75,21 @@ router.post('/guild/:uid/commands', (async (req, res) => {
 		if(element.guild_id == guildID) currentSchema = element;
 	});
 
-	let obj = JSON.parse(JSON.stringify(req.body));
-	let arrKeys = Object.keys(obj);
 	
-	arrKeys.forEach(key => {
-		let commands = JSON.parse(JSON.stringify(currentSchema.commands));
-		let comm = commands.filter(command => command.Name == key)[0];
-		let commId = commands.indexOf(comm);
+	let commandKey = Object.keys(req.body)[0];
+	
+	let commands = JSON.parse(JSON.stringify(currentSchema.commands));
+	let comm = await commands.find(command => command.Name == commandKey);
+	let commId = commands.indexOf(comm);
 
-		console.log(`${commId} ${obj[key]}`);
-		if(!comm) return res.sendStatus(404);
+	if(comm === -1) return res.sendStatus(404);
 
-		comm.Enabled = parseBool(obj[key]);
-		commands[commId] = comm;
-		currentSchema.commands = commands;
-	});
+	comm.Enabled = parseBool(req.body[commandKey]);
+	commands[commId] = comm;
+	currentSchema.commands = commands;
 
-	currentSchema.save();
+	await currentSchema.save();
+	await res.sendStatus(200);
 }));
 
 function parseBool(b) {

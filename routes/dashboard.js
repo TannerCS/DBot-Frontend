@@ -4,24 +4,6 @@ const guild = require('../models/guild');
 
 const router = express.Router();
 
-router.get('/guild/:uid/dashboard', (async (req, res) => {
-	//If user isn't logged in, force them to log in.
-	if(!req.cookies.access_token){
-		res.redirect('/login');
-		return;
-	}
-	let access_token = req.cookies.access_token;
-
-	//Get user information
-	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${access_token}` } });
-	let userJson = await userInfo.json();
-    
-	//Get database guild info
-	let guildSchema = await guild.find({owner_id: userJson.id});
-
-	res.redirect(`/guild/${guildSchema[0].guild_id}`);
-}));
-
 router.get('/guild/:uid',  (async (req, res) => {
 	//If user isn't logged in, force them to log in.
 	if(!req.cookies.access_token){
