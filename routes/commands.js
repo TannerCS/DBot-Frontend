@@ -8,6 +8,12 @@ const crypto = require('../constants/crypto');
 const guild = require('../models/guild');
 
 router.get('/guild/:uid/commands', (async (req, res) => {
+	//If user isn't logged in, force them to log in.
+	if(!req.cookies.access_token){
+		res.redirect('/login');
+		return;
+	}
+	
 	let guildID = req.params.uid;
     
 	if(!guildID) return res.send('something went wrong.');
@@ -23,6 +29,8 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 
 		access_token = token;
 	});
+
+	if(!access_token) return;
 
 	access_token = crypto.decrypt(access_token.access_token);
 
@@ -59,6 +67,12 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 }));
 
 router.post('/guild/:uid/commands', (async (req, res) => {
+	//If user isn't logged in, force them to log in.
+	if(!req.cookies.access_token){
+		res.redirect('/login');
+		return;
+	}
+
 	let guildID = req.params.uid;
 
 	if(!guildID || !req.body) return res.sendStatus(401);
@@ -75,10 +89,14 @@ router.post('/guild/:uid/commands', (async (req, res) => {
 		access_token = token;
 	});
 
-	access_token = crypto.decrypt(access_token.access_token);
+	if(!access_token) return;
+	
 
 	//Get database guild info
-	let guildSchema = await guild.findOne({guild_id: guildID});
+	let guildSchema = await guild.findOne({guild_id: guildID, owner_id: access_token.user_id});
+
+	if(!guildSchema) return res.sendStatus(404);
+
 	let commandKey = Object.keys(req.body);
 
 	//If the command.Name is not found

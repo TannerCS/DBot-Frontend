@@ -1,57 +1,134 @@
 <%- include('./header', {ownedGuilds: ownedGuilds}) %>
-<div class="row" style="overflow: hidden;">
-  <div class="col-sm-6" style="z-index: -1;">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
+<div class="row">
+  <div class="row">
+    <div class="col-sm-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Guild Members: <%= guildInfo.approximate_member_count %></h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <h5 class="card-title"> <%= guildSchema.analytics.messagePercent %></h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title"><%= guildSchema.analytics.userJoinedPercent %></h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title"><%= guildSchema.analytics.userLeftPercent %></h5>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-sm-6" style="z-index: -1;">
+  <div class="col-sm-6" style="">
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
+        <h5 class="card-title">User Messages (14 days)</h5>
+        <!-- <p class="card-text"></p> -->
+        <canvas id="myChart" width="100" height="100"></canvas>
+        <script>
+          var ctx = document.getElementById('myChart').getContext('2d');
+          var myChart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                  labels: [<% guildSchema.analytics.messages_received.map((analytic) => { %>
+                    "<%= new Date((analytic.Timestamp / 10000) - Math.abs(new Date(0, 0, 1).setFullYear(1))).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
+                  <% }) %>],
+                  datasets: [{
+                      label: '# of Messages Sent',
+                      data: [<% guildSchema.analytics.messages_received.map((analytic) => { %>
+                    "<%= analytic.Count %>",
+                  <% }) %>],
+                      backgroundColor: '#e6d74f00',
+                      borderColor: '#e6d74f',
+                      borderWidth: 2
+                  },
+                  {
+                      label: '# of Messages Deleted',
+                      data: [<% guildSchema.analytics.messages_deleted.map((analytic) => { %>
+                    "<%= analytic.Count %>",
+                  <% }) %>],
+                      backgroundColor: '#e6d74f00',
+                      borderColor: '#0dcaf0',
+                      borderWidth: 2
+                  }]
+              },
+              options: {
+                  scales: {
+                      y: {
+                          beginAtZero: true
+                      }
+                  },
+                  fill: true,
+                  pointRadius: 4,
+                  tension: 0.3,
+                  pointStyle: 'rectRot',
+                  borderJoinStyle: 'round'
+              }
+          });
+          </script>
       </div>
     </div>
   </div>
-  <div class="col-sm-6" style="z-index: -1;">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6" style="z-index: -1;">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6" style="z-index: -1;">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6" style="z-index: -1;">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
-      </div>
+  <div class="col-sm-6" style="">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Users (14 days)</h5>
+          <!-- <p class="card-text"></p> -->
+          <canvas id="myChart2" width="100" height="100"></canvas>
+          <script>
+            var ctx = document.getElementById('myChart2').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [<% guildSchema.analytics.users_joined.map((analytic) => { %>
+                      "<%= new Date((analytic.Timestamp / 10000) - Math.abs(new Date(0, 0, 1).setFullYear(1))).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
+                    <% }) %>],
+                    datasets: [{
+                        label: '# of Users Joined',
+                        data: [<% guildSchema.analytics.users_joined.map((analytic) => { %>
+                      "<%= analytic.Count %>",
+                    <% }) %>],
+                        backgroundColor: '#e6d74f00',
+                        borderColor: '#e6d74f',
+                        borderWidth: 2
+                    },
+                    {
+                        label: '# of Users Left',
+                        data: [<% guildSchema.analytics.users_left.map((analytic) => { %>
+                      "<%= analytic.Count %>",
+                    <% }) %>],
+                        backgroundColor: '#e6d74f00',
+                        borderColor: '#0dcaf0',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    fill: true,
+                    pointRadius: 4,
+                    tension: 0.3,
+                    pointStyle: 'rectRot',
+                    borderJoinStyle: 'round'
+                }
+            });
+            </script>
+        </div>
+      </div>  
     </div>
   </div>
 </div>

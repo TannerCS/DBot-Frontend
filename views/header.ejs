@@ -9,6 +9,7 @@
     <link href="/css/commands.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.1.1/dist/chart.min.js" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>  
     <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
 </head>
@@ -36,7 +37,7 @@
   <!-- end top navbar -->
 
   <!-- Sidebar -->
-  <div class="bg-dark border-right" id="sidebar-wrapper">
+  <div class="bg-dark border-right" id="sidebar-wrapper" style="z-index: 999;">
     <div class="list-group list-group-flush">
       <a href=<%= currentGuild.id != null ? `/guild/${currentGuild.id}` : '/' %> class="list-group-item list-group-item-action bg-dark">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-display" viewBox="0 0 16 16" style="margin-right: 10px;">
@@ -60,7 +61,7 @@
     </div>
   </div>
   <!-- end sidebar -->
-  <div class="container">
+  <div class="container" style="margin-bottom: 100px;">
     <div class="d-flex flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3" style="border-bottom: 1px solid #e6d74f!important">
       <%- currentGuild.icon %> 
       <h1 class="h2" style="margin-left:20px;"><%= currentGuild.name %></h1>

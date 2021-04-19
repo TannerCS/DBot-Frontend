@@ -28,6 +28,8 @@ router.get('/login', async (req, res) => {
 		access_token = token;
 	});
 
+	if(!access_token) return;
+
 	access_token = crypto.decrypt(access_token.access_token);
 
 	//Get user information
@@ -66,9 +68,16 @@ router.get('/auth', (async (req, res) => {
 	let json = await resp.json();
 	if(json.message) return res.send('something went wrong.');
 
+	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${json.access_token}` } });
+	let userJson = await userInfo.json();
+	if(userJson.message) return res.send('something went wrong.');
+
 	let expiresIn = json.expires_in;
 
-	let jwt = jsonwebtoken.sign({ access_token: crypto.encrypt(json.access_token)}, CONFIG.jwt_secret, {expiresIn: expiresIn});
+	let jwt = jsonwebtoken.sign({ 
+		access_token: crypto.encrypt(json.access_token),
+		user_id: userJson.id
+	}, CONFIG.jwt_secret, {expiresIn: expiresIn});
 
 	res.cookie('access_token', jwt, {expires: new Date(Date.now() + (expiresIn * 1000)), httpOnly: true});
 	res.redirect(`/guild/${req.query.guild_id}`);

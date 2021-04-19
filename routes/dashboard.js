@@ -29,6 +29,8 @@ router.get('/guild/:uid',  (async (req, res) => {
 		access_token = token;
 	});
 
+	if(!access_token) return;
+
 	access_token = crypto.decrypt(access_token.access_token);
 
 	//Get guild information from discord
@@ -42,7 +44,8 @@ router.get('/guild/:uid',  (async (req, res) => {
 	if(userJson.message) return res.send('something went wrong.');
     
 	//Get database guild info
-	let guildSchema = await guild.findOne({owner_id: userJson.id});
+	let guildSchema = await guild.findOne({guild_id: guildID, owner_id: userJson.id});
+	guildSchema = JSON.parse(JSON.stringify(guildSchema));
     
 	//Filter owned guilds
 	let ownedGuilds = await guildJson.filter(guild => guild.owner == true);
@@ -66,7 +69,34 @@ router.get('/guild/:uid',  (async (req, res) => {
 		}
 	});
 
-	res.render('dashboard', { userInfo: userJson, ownedGuilds: ownedGuilds, guildSchema: guildSchema, currentGuild:  ownedGuilds.find(guild => guild.id == guildID)});
+	if(guildSchema.analytics.messages_received.length > 1){
+		guildSchema.analytics.messagePercent = `Message Count: ${(guildSchema.analytics.messages_received[guildSchema.analytics.messages_received.length - 1].Count - guildSchema.analytics.messages_received[guildSchema.analytics.messages_received.length - 2].Count) / guildSchema.analytics.messages_received[guildSchema.analytics.messages_received.length - 1].Count * 100}%`;
+	}else{
+		guildSchema.analytics.messagePercent = 'Not enough data.';
+	}
+
+	if(guildSchema.analytics.users_joined.length > 1){
+		guildSchema.analytics.userJoinedPercent = `Message Count: ${(guildSchema.analytics.users_joined[guildSchema.analytics.messages_received.length - 1].Count - guildSchema.analytics.users_joined[guildSchema.analytics.messages_received.length - 2].Count) / guildSchema.analytics.users_joined[guildSchema.analytics.messages_received.length - 1].Count * 100}%`;
+	}else{
+		guildSchema.analytics.userJoinedPercent = 'Not enough data.';
+	}
+
+	if(guildSchema.analytics.users_left.length > 1){
+		guildSchema.analytics.userLeftPercent = `Message Count: ${(guildSchema.analytics.users_left[guildSchema.analytics.messages_received.length - 1].Count - guildSchema.analytics.users_left[guildSchema.analytics.messages_received.length - 2].Count) / guildSchema.analytics.users_left[guildSchema.analytics.messages_received.length - 1].Count * 100}%`;
+	}else{
+		guildSchema.analytics.userLeftPercent = 'Not enough data.';
+	}
+
+	guildSchema.analytics.messages_received = guildSchema.analytics.messages_received.slice(0, 14);
+	guildSchema.analytics.messages_deleted = guildSchema.analytics.messages_deleted.slice(0, 14);
+	guildSchema.analytics.users_joined = guildSchema.analytics.messages_deleted.slice(0, 14);
+	guildSchema.analytics.users_left = guildSchema.analytics.messages_deleted.slice(0, 14);
+
+	let guildInfo = await fetch(`https://discordapp.com/api/guilds/${guildID}?with_counts=true`, {headers: { Authorization: `Bot ${CONFIG.bot_token}` } });
+	guildInfo = await guildInfo.json();
+
+
+	res.render('dashboard', { userInfo: userJson, ownedGuilds: ownedGuilds, guildSchema: guildSchema, currentGuild:  ownedGuilds.find(guild => guild.id == guildID), guildInfo: guildInfo});
 }));
 
 module.exports = router;
