@@ -12,7 +12,7 @@ const crypto = require('../constants/crypto');
 router.get('/login', async (req, res) => {
 	//If user isn't logged in, force them to log in.
 	if(!req.cookies.access_token){
-		res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=8&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20guilds.join%20applications.commands%20bot');
+		res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=2416127046&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20bot%20applications.commands');
 		return;
 	}
 
