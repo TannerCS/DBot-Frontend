@@ -17,6 +17,10 @@ const guildSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	analytics: {
+		type: Object,
+		required: true
+	},
 });
 
 module.exports = mongoose.model('guild-information', guildSchema, 'guild-information');

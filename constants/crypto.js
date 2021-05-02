@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const algorithm = 'aes-256-ctr';
 const iv = crypto.randomBytes(16);
@@ -17,7 +18,6 @@ const encrypt = (text) => {
 };
 
 const decrypt = (hash) => {
-
 	const decipher = crypto.createDecipheriv(algorithm, CONFIG.crypto_secret, Buffer.from(hash.iv, 'hex'));
 
 	const decrpyted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);
@@ -25,7 +25,21 @@ const decrypt = (hash) => {
 	return decrpyted.toString();
 };
 
+const verifyJwt = (token) => {
+	let verifiedToken = jwt.verify(token, CONFIG.jwt_secret, (err, token) => {
+		if(err)  {
+			console.log(err);
+			return null;
+		}
+		token.access_token = decrypt(token.access_token);
+		return token;
+	});
+
+	return verifiedToken;
+};
+
 module.exports = {
 	encrypt,
-	decrypt
+	decrypt,
+	verifyJwt
 };

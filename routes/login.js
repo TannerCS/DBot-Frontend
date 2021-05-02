@@ -12,7 +12,7 @@ const crypto = require('../constants/crypto');
 router.get('/login', async (req, res) => {
 	//If user isn't logged in, force them to log in.
 	if(!req.cookies.access_token){
-		res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=2416127046&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20bot%20applications.commands');
+		res.redirect('https://discord.com/api/oauth2/authorize?client_id=388799511621009408&permissions=2416127046&redirect_uri=http%3A%2F%2F192.168.0.189%3A5000%2Fauth&response_type=code&scope=identify%20email%20guilds%20bot%20applications.commands');
 		return;
 	}
 
@@ -64,18 +64,16 @@ router.get('/auth', (async (req, res) => {
 		method: 'POST',
 		body: data
 	});
+	resp = await resp.json();
 
-	let json = await resp.json();
-	if(json.message) return res.send('something went wrong.');
-
-	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${json.access_token}` } });
+	let userInfo = await fetch('https://discordapp.com/api/users/@me', {headers: { Authorization: `Bearer ${resp.access_token}` } });
 	let userJson = await userInfo.json();
 	if(userJson.message) return res.send('something went wrong.');
 
-	let expiresIn = json.expires_in;
+	let expiresIn = resp.expires_in;
 
 	let jwt = jsonwebtoken.sign({ 
-		access_token: crypto.encrypt(json.access_token),
+		access_token: crypto.encrypt(resp.access_token),
 		user_id: userJson.id
 	}, CONFIG.jwt_secret, {expiresIn: expiresIn});
 

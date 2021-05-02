@@ -42,7 +42,7 @@
               type: 'line',
               data: {
                   labels: [<% guildSchema.analytics.messages_received.map((analytic) => { %>
-                    "<%= new Date((analytic.Timestamp / 10000) - Math.abs(new Date(0, 0, 1).setFullYear(1))).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
+                    "<%= new Date(analytic.Timestamp * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
                   <% }) %>],
                   datasets: [{
                       label: '# of Messages Sent',
@@ -92,7 +92,7 @@
                 type: 'line',
                 data: {
                     labels: [<% guildSchema.analytics.users_joined.map((analytic) => { %>
-                      "<%= new Date((analytic.Timestamp / 10000) - Math.abs(new Date(0, 0, 1).setFullYear(1))).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
+                      "<%= new Date(analytic.Timestamp * 1000).toISOString().replace(/T/, ' ').replace(/\..+/, '').split(' ')[0] %>",
                     <% }) %>],
                     datasets: [{
                         label: '# of Users Joined',

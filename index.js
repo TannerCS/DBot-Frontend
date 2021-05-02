@@ -5,6 +5,7 @@ const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
 const commandRouter = require('./routes/commands');
 const dashboardRouter = require('./routes/dashboard');
+const analyticRouter = require('./routes/analytics');
 
 const app = express();
 const mongoose = require('mongoose');
@@ -43,6 +44,7 @@ app.use(loginRouter);
 app.use(logoutRouter);
 app.use(commandRouter);
 app.use(dashboardRouter);
+app.use(analyticRouter);
 
 app.get('/', (async (req, res) => {
 	return res.render('index');
