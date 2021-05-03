@@ -1,7 +1,17 @@
 <%- include('./header', {ownedGuilds: ownedGuilds}) %>
 <br />
 <div id="commands" class="list-group">
+    <% let lastCategory = ''; %>
     <% for(var i = 0; i < guildSchema.commands.length; i++){ %>
+        <% if(lastCategory !== guildSchema.commands[i].Category) { %>
+            <% if(lastCategory === '') {%>
+                <div class="h-divider1" id=<%= guildSchema.commands[i].Category %>></div>
+            <% } else { %>
+                <div class="h-divider" id=<%= guildSchema.commands[i].Category %>></div>
+            <% } %>
+            <h4><%= guildSchema.commands[i].Category %></h4>
+            <% lastCategory = guildSchema.commands[i].Category %>
+        <% } %>
         <a class="list-group-item list-group-item-action bg-dark text-light" aria-current="true" style="margin: 0px 0px 5px 0px!important;">
             <div class="d-flex w-100 justify-content-between align-items-start">
                 <h5 class="mb-1"><%= guildSchema.commands[i].Name %></h5>
@@ -23,6 +33,7 @@
                     <%= ln %><br>
                 <% }) %>
             </p>
+            <p class="mb-1"><%= guildSchema.commands[i].Category %></p>
         </a>
     <% } %>
 </div>

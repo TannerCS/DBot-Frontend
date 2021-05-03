@@ -8,7 +8,7 @@ const getGuildInfo = async (access_token) => {
 
 	//Filter owned guilds
 	let ownedGuilds = await guildJson.filter(guild => guild.owner === true);
-
+	
 
 	//filter out guilds that the bot is not in
 	for (let i = 0; i < ownedGuilds.length; i++) {

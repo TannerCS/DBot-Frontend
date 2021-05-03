@@ -1,3 +1,12 @@
 #commands a:hover {
     background-color: var(--bs-gray) !important;
 }
+
+.h-divider1 {
+    margin: 10px 0px 20px;
+}
+
+.h-divider {
+    margin: 10px 0px 20px;
+    border-top: 2px solid #e6d74f;
+}

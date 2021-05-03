@@ -39,6 +39,7 @@ app.use((req, res, next) => {
 	};
 	next();
 });
+app.use(function (req, res, next) {res.locals.commands={}; next();});
 
 app.use(loginRouter);
 app.use(logoutRouter);

@@ -21,6 +21,34 @@ router.get('/guild/:uid/commands', (async (req, res) => {
 	//Get database guildSchema info
 	let currentGuildSchema = await guildSchema.findOne({guild_id: guildID});
 
+	currentGuildSchema.commands = currentGuildSchema.commands.sort((a, b) => {
+		var nameA = a.Category.toUpperCase(); // ignore upper and lowercase
+		var nameB = b.Category.toUpperCase(); // ignore upper and lowercase
+
+		if (nameA < nameB) {
+			return -1;
+		}
+		if (nameA > nameB) {
+			return 1;
+		}
+		
+		// names must be equal
+		return 0;
+	});
+
+	let categories = [];
+	
+	currentGuildSchema.commands.forEach(command => {
+		if(!categories.includes(command.Category)) {
+			categories.push(command.Category);
+		}
+	});
+	
+	res.locals.commands = {
+		isAtCommandsPage: true,
+		categories: categories
+	};
+
 	res.render('commands', {guildSchema: currentGuildSchema, ownedGuilds: ownedGuilds, currentGuild:  ownedGuilds.find(guildSchema => guildSchema.id === guildID)});
 }));
 
